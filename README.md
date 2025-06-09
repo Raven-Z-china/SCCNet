@@ -16,7 +16,9 @@ This architecture delivers two breakthrough capabilities:
 
 Empirical validation across ImageNet-1k, CIFAR-10, and CIFAR-100 benchmarks demonstrates significant accuracy improvements, confirming SCC's superiority in modeling complex visual patterns while maintaining hardware efficiency.
 
-![intro](figs/intro.gif)
+![intro](figs/frame.pdf)
+
+![intro2](figs/sccnet.pdf)
 
 ## Subspace Combination Convolution
 
