@@ -76,7 +76,7 @@ class Conv2d(nn.Module):
 
 **SCCNet34 vs. ResNet34 Variants**
 
-| Model             | Downsample  | Params   | GFlops (Theo) | Top-1 (%) | Top-5 (%) |
+| Model             | Downsample  | Params   | GFlops (Theo) | Top-1 (%) | Top-5 (%) | URL
 |-------------------|-------------|----------|---------------|-----------|-----------|
 | **ResNet34**      |             |          |               |           |           |
 |                   | Conv1x1     | 21.79 M  | 3.68          | 73.74     | 91.80     |
@@ -87,7 +87,7 @@ class Conv2d(nn.Module):
 |                   | Conv1x1     | 21.84 M  | 4.07 (3.68)   | 74.08 (+0.34) | 91.83 (+0.03) |
 |                   | Conv5x5     | 25.98 M  | 4.07 (4.15)   | 74.13 (+0.39) | 91.71 (-0.09) |
 |                   | SCC 3x3     | 23.22 M  | 4.25 (3.84)   | 74.31 (+0.57) | 91.75 (-0.05) |
-|                   | SCC 5x5     | 25.98 M  | 4.73 (4.15)   | 74.85 (+1.11) | 92.06 (+0.26) |
+|                   | SCC 5x5     | 25.98 M  | 4.73 (4.15)   | 74.85 (+1.11) | 92.06 (+0.26) |  [HF](https://huggingface.co/Raven686/SCCNet/tree/main)
 
 **Key Observations**:
 -GFlops values (baseline values in parentheses, actual SCCNet values outside parentheses)
