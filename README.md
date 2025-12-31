@@ -11,66 +11,14 @@ Departing from activation-dependent nonlinearity approaches, SCC revolutionizes 
 ​​Spatially Specialized Kernel Partitioning​​: Convolutional kernels are decomposed into task-optimized subspaces for localized feature computation.
 ​​Feature-Guided Dynamic Recombination​​: Subspaces are adaptively recomposed under the guidance of local feature maxima.
 This architecture delivers two breakthrough capabilities:
-✓ ​​Activation-Free Nonlinearity​​: Achieves nonlinear transformations without separate activation layers, eliminating distribution shift inherent in traditional convolution-activation blocks.
-✓ ​​Continuous Receptive Field Adaptation​​: Enables fluid receptive field scaling through weight subspace recombination, overcoming interpolation artifacts in deformable convolutions and fixed-size constraints of standard convolutions.
+✓ ​​Dynamic Receptive Field Scaling: By reconfiguring weight subspaces, our method achieves dynamic receptive field adjustment within a single-branch architecture, yielding substantial gains in both performance and parameter efficiency.
+✓ ​​Intrinsic Nonlinearity: The first nonlinear transformation that integrates activation functions with convolutional operators, eliminating the need for explicit activation layers and circumventing the output distribution shift induced by traditional standard convolution blocks.
 
 Empirical validation across ImageNet-1k, CIFAR-10, and CIFAR-100 benchmarks demonstrates significant accuracy improvements, confirming SCC's superiority in modeling complex visual patterns while maintaining hardware efficiency.
 
 ![intro](figs/frame.png)
 
 ![intro2](figs/sccnet.png)
-
-## Subspace Combination Convolution
-
-The SCC operator dynamically adjusts the number of convolutional kernel samples to flexibly capture subspaces with varying receptive fields. Each subspace is then subjected to distinct affine transformations. Our implementation is readily implementable and delivers superior training performance.​
-
-```python
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-
-
-class Conv2d(nn.Module):
-    def __init__(self, in_channels, out_channels, stride=1, kernel_size = 3, dilation=1, groups=1, mask_prob=0.005):
-        super(Conv2d, self).__init__()
-        self.in_channel = in_channels
-        self.rge = kernel_size//2
-        self.stride = stride
-        self.dilation = dilation
-        self.groups = groups
-        self.mask_prob = mask_prob
-        self.weight = nn.Parameter(torch.Tensor(out_channels,in_channels,kernel_size,kernel_size))
-        self.bias = nn.Parameter(torch.Tensor(self.rge+1, out_channels))
-        self.alpha = nn.Parameter(torch.Tensor(self.rge+1, out_channels,1,1))
-        self.beta = nn.Parameter(torch.Tensor(self.rge+1, out_channels,1,1))
-        self.tanh = nn.Tanh()
-        nn.init.uniform_(self.weight, a=-0.2, b=0.2)
-        nn.init.uniform_(self.bias, a=-2.0, b=2.0)
-        nn.init.uniform_(self.alpha, a=-2.0, b=2.0)
-        nn.init.uniform_(self.beta, a=-2.0, b=2.0)
-
-    def charge_val(self, old, new, output, alpha, beta, lock):
-        cmp_val = new > old
-        if self.training:
-            select = (torch.rand_like(old) + self.mask_prob).floor_() == 1.0
-            cmp_val = ((cmp_val) | select) & ~lock
-            lock = lock | select
-        return torch.where(cmp_val , new, old), torch.where(cmp_val, new*(1+self.tanh(alpha))+beta, output), lock
-
-    def forward(self, x):
-        weight = self.weight
-        bias = self.bias
-        scc = F.conv2d(x, weight[:, :, self.rge:self.rge + 1, self.rge:self.rge + 1],
-                               bias[0], self.stride, 0, 1, self.groups)
-        output = scc*(1+self.tanh(self.alpha[0]))+self.beta[0]
-        lock = (torch.rand_like(output) + self.mask_prob).floor_() == 1.0
-        for i in range(1,self.rge+1):
-            new_scc = F.conv2d(x, weight[:, :, self.rge - i:self.rge + i + 1, self.rge - i:self.rge + i + 1],
-                               bias[i], self.stride, i*self.dilation, self.dilation, self.groups)
-            scc, output, lock = self.charge_val(scc, new_scc, output, self.alpha[i], self.beta[i], lock)
-        return output
-
-```
 
 # Model Comparison on ImageNet-1K
 
