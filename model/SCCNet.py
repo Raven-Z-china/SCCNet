@@ -22,10 +22,10 @@ class Conv2d(nn.Module):
         nn.init.uniform_(self.alpha, a=-2.0, b=2.0)
         nn.init.uniform_(self.beta, a=-2.0, b=2.0)
 
-    def charge_val(self, old, new, output, alpha, beta, lock):
+    def charge_val(self, old, new, output, alpha, beta, lock, mask_prob):
         cmp_val = new > old
         if self.training:
-            select = (torch.rand_like(old) + self.mask_prob).floor_() == 1.0
+            select = (torch.rand_like(old) + mask_prob).floor_() == 1.0
             cmp_val = ((cmp_val) | select) & ~lock
             lock = lock | select
         return torch.where(cmp_val , new, old), torch.where(cmp_val, new*(1+self.tanh(alpha))+beta, output), lock
@@ -40,7 +40,7 @@ class Conv2d(nn.Module):
         for i in range(1,self.rge+1):
             new_scc = F.conv2d(x, weight[:, :, self.rge - i:self.rge + i + 1, self.rge - i:self.rge + i + 1],
                                bias[i], self.stride, i*self.dilation, self.dilation, self.groups)
-            scc, output, lock = self.charge_val(scc, new_scc, output, self.alpha[i], self.beta[i], lock)
+            scc, output, lock = self.charge_val(scc, new_scc, output, self.alpha[i], self.beta[i], lock, self.mask_prob/(1-i*self.mask_prob))
         return output
 
 class BasicBlock(nn.Module):
